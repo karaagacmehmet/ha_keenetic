@@ -1,7 +1,7 @@
 """Constants for the Keenetic integration."""
 from datetime import timedelta
 
-DOMAIN = "keenetic"
+DOMAIN = "ha_keenetic"
 MANUFACTURER = "Keenetic"
 
 # Configuration
