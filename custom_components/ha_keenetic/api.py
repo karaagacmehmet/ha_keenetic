@@ -65,7 +65,6 @@ class KeeneticAPI:
                     if response.status == 200:
                         data = await response.json()
                         
-                        # Вычисляем процент использования памяти
                         memory_total = int(data.get("memtotal", 0))
                         memory_free = int(data.get("memfree", 0))
                         memory_usage = round((memory_total - memory_free) / memory_total * 100, 1) if memory_total > 0 else 0
@@ -179,13 +178,11 @@ class KeeneticAPI:
     async def get_system_info(self) -> dict:
         """Get system information for config flow."""
         try:
-            # Получаем все данные через существующий метод get_data
             data = await self.get_data()
             
             if not data:
                 raise Exception("Failed to get system information")
     
-            # Формируем нужный формат данных для config_flow
             return {
                 "device": data.get("device", "Router"),
                 "manufacturer": data.get("manufacturer", "Keenetic"),
@@ -202,35 +199,29 @@ class KeeneticAPI:
         """Get all required data from router."""
         try:
             async with aiohttp.ClientSession() as session:
-                # Получаем базовую информацию
                 system_info = await self._get_system_info()
                 version_info = await self._get_version_info()
                 interface_info = await self._get_interface_status()
                 mesh_info = await self._get_mesh_info()
 
-                # Обработка Ethernet портов
                 ethernet_interfaces = await EthernetProcessor.process_ethernet_ports(
                     interface_info,
                     self._get_interface_statistics
                 )
 
-                # Обработка WiFi интерфейсов
                 wifi_interfaces = await WiFiProcessor.process_wifi_interfaces(
                     session,
                     self._base_url,
                     self._auth_token
                 )
 
-                # Объединяем все интерфейсы
                 all_interfaces = {
                     **ethernet_interfaces,
                     **wifi_interfaces
                 }
 
-                # Обработка mesh узлов
                 processed_mesh = MeshProcessor.process_mesh_nodes(mesh_info)
 
-                # Возвращаем все данные
                 return {
                     **system_info,
                     **version_info,
@@ -277,7 +268,7 @@ class KeeneticAPI:
                         "Authorization": f"Basic {self._auth_token}",
                         "Content-Type": "application/json"
                     },
-                    json={"up": "true"}  # Изменено на JSON-тело запроса
+                    json={"up": "true"}
                 ) as response:
                     return response.status == 200
         except Exception as ex:
@@ -298,7 +289,7 @@ class KeeneticAPI:
                         "Authorization": f"Basic {self._auth_token}",
                         "Content-Type": "application/json"
                     },
-                    json={"down": "true"}  # Изменено на JSON-тело запроса
+                    json={"down": "true"}
                 ) as response:
                     return response.status == 200
         except Exception as ex:

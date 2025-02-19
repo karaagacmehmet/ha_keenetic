@@ -16,20 +16,16 @@ class EthernetProcessor:
         processed_ports = {}
         
         try:
-            # Сначала найдем WAN интерфейс
             wan_interface = None
             for interface_id, interface_data in interface_info.items():
                 if interface_data.get("defaultgw") is True:
                     wan_interface = interface_id
                     break
 
-            # Обработка интерфейсов
             for interface_id, interface_data in interface_info.items():
-                # Получаем статистику для интерфейса
                 interface_stats = await get_statistics_fn(interface_id)
                 
                 if interface_id == wan_interface:
-                    # WAN порт
                     port_data = interface_data.get("port", {})
                     processed_ports[interface_id] = {
                         "id": interface_id,
@@ -49,7 +45,6 @@ class EthernetProcessor:
                         }
                     }
                 elif "port" in interface_data:
-                    # Обработка физических портов
                     for port_id, port_data in interface_data["port"].items():
                         if port_data.get("type") == "Port":
                             port_interface_id = f"{interface_id}_port_{port_id}"
