@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[KeeneticSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         icon=ICON_MEMORY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda x: x * 1024,  # Конвертация KB в bytes
+        value_fn=lambda x: x * 1024,
     ),
     
     KeeneticSensorEntityDescription(
@@ -202,11 +202,9 @@ async def async_setup_entry(
     
     entities = []
     
-    # Добавляем стандартные сенсоры
     for description in SENSOR_TYPES:
         entities.append(KeeneticSensor(coordinator, description, config_entry))
     
-    # Добавляем сенсоры интерфейсов
     if coordinator.data and "interface" in coordinator.data:
         _LOGGER.debug("Found interfaces: %s", coordinator.data["interface"].keys())
         for interface_id, interface_data in coordinator.data["interface"].items():
@@ -219,7 +217,6 @@ async def async_setup_entry(
                     )
                 )
 
-    # Добавляем сенсоры mesh
     if coordinator.data and "mesh" in coordinator.data:
         _LOGGER.debug("Found mesh nodes: %s", coordinator.data["mesh"].keys())
         for node_id, node_data in coordinator.data["mesh"].items():
@@ -272,10 +269,8 @@ class KeeneticSensor(CoordinatorEntity, SensorEntity):
             return None
             
         if self.entity_description.use_full_data:
-            # Для сенсоров, которым нужны все данные
             return self.entity_description.value_fn(self.coordinator.data)
         else:
-            # Для обычных сенсоров, получающих значение по ключу
             value = self.coordinator.data.get(self.entity_description.key)
             if value is None:
                 return None

@@ -1,7 +1,10 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/v/release/akinin/ha_keenetic?style=flat&color=%23A349A4)](https://github.com/akinin/ha_keenetic)
 # Интеграция Keenetic Router для Home Assistant
 [English ver.](README.md)
 
 Это пользовательская интеграция для маршрутизаторов Keenetic в Home Assistant. Она предоставляет подробную информацию о вашем роутере Keenetic, включая состояние WiFi сетей, ethernet портов и mesh-сети.
+
 
 ## Возможности
 
@@ -28,16 +31,61 @@
 2. Скопируйте папку `ha_keenetic` в директорию `custom_components`
 3. Перезагрузите Home Assistant
 
-## Настройка
+### Важные моменты
 
-1. Перейдите в Configuration > Integrations
-2. Нажмите кнопку "+"
+Интеграция обменивается с роутером данными через REST API, для его работы необходимо настроить переадресацию портов:
+
+1. Зайдите в веб-интерфейс роутера
+2. Перейдите в раздел "Port Forwarding" > "Add rule"
+3. Настройте следующие параметры:
+   - Enable rule: ✓ (включено)
+   - Description: rest api
+   - Input: Other destination
+   - IP address: 192.168.1.0 (адрес локальной сети в которой находится HomeAssistant)
+   - Subnet mask: 255.255.255.0 (/24)
+   - Output: This Keenetic device
+   - Protocol: TCP
+   - Rule type: Single port
+   - Open the port: 81
+   - Redirect to port: 79
+   - Work schedule: Always on
+
+![Rest API](images/0.png)
+
+⚠️ Рекомендация по безопасности:
+Для повышения безопасности рекомендуется настроить правила Firewall таким образом, чтобы доступ к REST API был разрешен только с IP-адреса вашего Home Assistant. Это поможет защитить роутер от несанкционированного доступа из локальной сети.
+
+
+Для автоматического обнаружения роутера в сети необходимо включить UPnP на вашем Keenetic:
+
+1. Зайдите в веб-интерфейс роутера
+2. Перейдите в раздел "System Settings" > "Component options"
+3. Убедитесь, что "UPnP" включен:
+
+![UPnP настройка](images/0-1.png)
+
+## Автоматическая настройка
+
+Если UPnP включен, то интеграция обнаружит роутер.
+
+![Обнаруженная интеграция](images/1.png)
+
+## Ручная настройка
+
+1. Перейдите в "Settings" > "Devices & services"
+2. Нажмите кнопку "+ ADD INTEGRATION"
 3. Найдите "Keenetic Router"
 4. Введите данные вашего роутера:
    - IP адрес (по умолчанию: 192.168.1.1)
    - Порт (по умолчанию: 81)
    - Имя пользователя (по умолчанию: admin)
    - Пароль
+
+![Поиск интеграции](images/1-1.png)
+
+![Форма подключения](images/2.png)
+
+![Успешное подключение](images/3.png)
 
 ## Поддерживаемые устройства
 
@@ -58,6 +106,20 @@
 
 ### Переключатели
 - WiFi сети (включение/выключение)
+
+![Сенсоры](images/4.png)
+
+![Диагностика](images/5.png)
+
+![Управление WiFi интерфейсами](images/7.png)
+
+![Управление WiFi интерфейсом](images/7-1.png)
+
+![WAN информация](images/8.png)
+
+Информация о Mesh устройствах (если имеются):
+
+![Mesh информация](images/9.png)
 
 ## Участие в разработке
 

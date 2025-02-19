@@ -29,7 +29,6 @@ class KeeneticSwitchEntityDescription(SwitchEntityDescription):
     value_fn: callable = lambda x: x
     available_fn: callable = lambda x: True
 
-# Определяем типы переключателей
 SWITCH_TYPES: Final[tuple[KeeneticSwitchEntityDescription, ...]] = (
     KeeneticSwitchEntityDescription(
         key="wifi_main",
@@ -72,7 +71,6 @@ async def async_setup_entry(
         
     _LOGGER.debug("Interface data: %s", coordinator.data["interface"])
     
-    # Ищем все WiFi интерфейсы
     wifi_interfaces = {
         k: v for k, v in coordinator.data["interface"].items()
         if k.startswith("WifiMaster") and "AccessPoint" in k
@@ -83,7 +81,6 @@ async def async_setup_entry(
     for interface_id, interface_data in wifi_interfaces.items():
         _LOGGER.debug("Processing WiFi interface: %s = %s", interface_id, interface_data)
         
-        # Проверяем наличие необходимых данных
         if interface_data.get("ssid") or interface_data.get("description"):
             _LOGGER.debug("Creating switch for interface: %s", interface_id)
             entities.append(
@@ -128,12 +125,10 @@ class KeeneticWiFiSwitch(CoordinatorEntity, SwitchEntity):
             ap_data = self.coordinator.data["interface"][ap_id]
             ssid = ap_data.get("ssid", "")
             
-            # Определяем тип WiFi сети по идентификатору
             is_5ghz = "WifiMaster1" in ap_id
             is_guest = "AccessPoint1" in ap_id
             is_iot = "AccessPoint2" in ap_id
             
-            # Формируем имя
             prefix = "5GHz" if is_5ghz else "2.4GHz"
             self._attr_name = f"{ssid} ({prefix})"
                 
@@ -166,7 +161,6 @@ class KeeneticWiFiSwitch(CoordinatorEntity, SwitchEntity):
             
         ap_data = self.coordinator.data["interface"].get(self._ap_id, {})
         
-        # Получаем пароль из вложенной структуры authentication
         wifi_password = (
             ap_data.get("authentication", {})
             .get("wpa-psk", {})

@@ -1,11 +1,12 @@
 """Config flow for Keenetic integration."""
 from typing import Any
 import logging
+from urllib.parse import urlparse
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 import voluptuous as vol
 
 from .const import (
@@ -14,16 +15,17 @@ from .const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_ENABLE_MESH,  # Добавляем новые константы
+    CONF_ENABLE_MESH,
     CONF_UPDATE_INTERVAL,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
-    DEFAULT_ENABLE_MESH,  # Добавляем значения по умолчанию
+    DEFAULT_ENABLE_MESH,
     DEFAULT_UPDATE_INTERVAL,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     ERROR_UNKNOWN,
+    MANUFACTURER,
 )
 from .api import KeeneticAPI
 
@@ -40,6 +42,10 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.discovered_host: str | None = None
+
     async def async_validate_input(self, data: dict) -> bool:
         """Validate the user input allows us to connect."""
         try:
@@ -53,7 +59,6 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not await api.authenticate():
                 raise InvalidAuth
 
-            # Проверяем, что можем получить данные
             system_info = await api.get_system_info()
             if not system_info:
                 raise CannotConnect
@@ -66,6 +71,24 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             raise CannotConnect from error
 
+    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+        """Handle a discovered Keenetic router."""
+        hostname = urlparse(discovery_info.ssdp_location).hostname
+        if not hostname:
+            return self.async_abort(reason="no_host")
+
+        await self.async_set_unique_id(discovery_info.upnp.get("serialNumber", hostname))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: hostname})
+
+        self.discovered_host = hostname
+        
+        self.context["title_placeholders"] = {
+            "name": discovery_info.upnp.get("friendlyName", "Keenetic Router"),
+            "host": hostname
+        }
+
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -74,16 +97,10 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Проверка на уже существующую конфигурацию
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}_{user_input[CONF_PORT]}"
-                )
-                self._abort_if_unique_id_configured()
-
-                # Проверка подключения
+                user_input[CONF_HOST] = self.discovered_host or user_input[CONF_HOST]
+                
                 await self.async_validate_input(user_input)
 
-                # Добавляем значения по умолчанию для новых опций
                 user_input[CONF_ENABLE_MESH] = DEFAULT_ENABLE_MESH
                 user_input[CONF_UPDATE_INTERVAL] = DEFAULT_UPDATE_INTERVAL
 
@@ -96,15 +113,17 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = ERROR_CANNOT_CONNECT
             except InvalidAuth:
                 errors["base"] = ERROR_INVALID_AUTH
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = ERROR_UNKNOWN
+
+        default_host = self.discovered_host or DEFAULT_HOST
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+                    vol.Required(CONF_HOST, default=default_host): str,
                     vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
@@ -115,6 +134,7 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
 
     @staticmethod
     @callback

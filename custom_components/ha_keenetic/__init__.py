@@ -22,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             port=entry.data["port"],
         )
 
-        # Проверяем подключение
         if not await api.authenticate():
             _LOGGER.error("Failed to authenticate with Keenetic router")
             raise ConfigEntryNotReady("Failed to authenticate")
@@ -48,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_interval=UPDATE_INTERVAL,
         )
 
-        # Получаем первоначальные данные
         await coordinator.async_config_entry_first_refresh()
         
         if not coordinator.data:

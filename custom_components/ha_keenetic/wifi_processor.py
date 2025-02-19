@@ -12,7 +12,6 @@ class WiFiProcessor:
         """Process WiFi interfaces and return formatted data."""
         wifi_data = {}
         try:
-            # Get access point data for both frequency bands
             for band in ["WifiMaster0", "WifiMaster1"]:
                 async with session.get(
                     f"{base_url}/rci/interface/{band}",
@@ -22,7 +21,6 @@ class WiFiProcessor:
                         master_data = await response.json()
                         _LOGGER.debug("%s data: %s", band, master_data)
                         
-                        # Iterate through possible access points (0-6)
                         for i in range(7):
                             ap_id = f"{band}/AccessPoint{i}"
                             async with session.get(
@@ -32,15 +30,12 @@ class WiFiProcessor:
                                 if ap_response.status == 200:
                                     ap_data = await ap_response.json()
                                     _LOGGER.debug("AP data for %s: %s", ap_id, ap_data)
-                                    # Only process APs that have SSID configured
                                     if ap_data.get("ssid"):
-                                        # Extract WiFi password from nested structure
                                         wifi_password = (
                                             ap_data.get("authentication", {})
                                             .get("wpa-psk", {})
                                             .get("psk", "")
                                         )
-                                        # Format and store AP data
                                         wifi_data[ap_id] = {
                                             "id": ap_id,
                                             "type": "AccessPoint",
