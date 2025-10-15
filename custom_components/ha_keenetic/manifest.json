@@ -1,13 +1,13 @@
 {
-  "domain": "ha_keenetic",
-  "name": "Keenetic Router",
-  "codeowners": ["@akinin"],
+  "domain": "ha_keenetic_mk",
+  "name": "Keenetic Router & Mobile",
+  "codeowners": ["@akinin","@karaagacmehmet"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/akinin/ha_keenetic",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/akinin/ha_keenetic/issues",
+  "issue_tracker": "",
   "requirements": [],
   "ssdp": [
     {
@@ -19,5 +19,5 @@
       "manufacturer": "ZyXEL Communications Corp."
     }
   ],
-  "version": "1.1.2"
+  "version": "0.1.0"
 }
