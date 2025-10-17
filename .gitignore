@@ -25,3 +25,7 @@ var/
 .vscode/
 *.swp
 *.swo
+/.vs/ha_keenetic/v17
+/.vs/ha_keenetic/FileContentIndex
+/.vs/ha_keenetic/config/applicationhost.config
+/.vs

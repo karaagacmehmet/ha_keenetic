@@ -1,4 +1,4 @@
-"""API client for Keenetic routers."""
+﻿"""API client for Keenetic routers."""
 import base64
 import logging
 import aiohttp
@@ -66,9 +66,15 @@ class KeeneticAPI:
                     if response.status == 200:
                         data = await response.json()
                         
+                        # memory =  disk olarak görünüyor . ram değil. modem arayüzüne göre
                         memory_total = int(data.get("memtotal", 0))
                         memory_free = int(data.get("memfree", 0))
                         memory_usage = round((memory_total - memory_free) / memory_total * 100, 1) if memory_total > 0 else 0
+
+                        # ram
+                        mem_str = data.get("memory")
+                        ram_used, ram_total = map(int, mem_str.split("/"))
+                        ram_percent = (ram_used / ram_total) * 100
 
                         return {
                             "cpu_usage": data.get("cpuload", 0),
@@ -77,6 +83,7 @@ class KeeneticAPI:
                             "memory_free": memory_free,
                             "hostname": data.get("hostname", ""),
                             "domainname": data.get("domainname", ""),
+                            "ram_usage": ram_percent
                         }
                     return {}
         except Exception as ex:

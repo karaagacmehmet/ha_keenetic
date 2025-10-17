@@ -84,6 +84,14 @@ SENSOR_TYPES: tuple[KeeneticSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     KeeneticSensorEntityDescription(
+        key="ram_usage",
+        name="RAM Usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon=ICON_MEMORY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    KeeneticSensorEntityDescription(
         key="memory_free",
         name="Memory Free",
         native_unit_of_measurement=UnitOfInformation.BYTES,
