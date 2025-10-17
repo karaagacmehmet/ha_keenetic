@@ -74,7 +74,7 @@ class KeeneticAPI:
                         # ram
                         mem_str = data.get("memory")
                         ram_used, ram_total = map(int, mem_str.split("/"))
-                        ram_percent = (ram_used / ram_total) * 100
+                        ram_percent = round((ram_used / ram_total) * 100,1)
 
                         return {
                             "cpu_usage": data.get("cpuload", 0),
