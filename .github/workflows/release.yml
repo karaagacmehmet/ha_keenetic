@@ -19,12 +19,12 @@ jobs:
       - name: Prepare release
         run: |
           cd ${{ github.workspace }}/custom_components/ha_keenetic
-          zip -r ha_keenetic.zip ./
+          zip -r ha_keenetic_mk.zip ./
       - name: Upload zip
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/custom_components/ha_keenetic/ha_keenetic.zip
-          asset_name: ha_keenetic.zip
+          file: ${{ github.workspace }}/custom_components/ha_keenetic/ha_keenetic_mk.zip
+          asset_name: ha_keenetic_mk.zip
           tag: ${{ github.ref }}
           overwrite: true
