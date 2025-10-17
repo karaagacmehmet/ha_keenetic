@@ -17,8 +17,9 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+
 from .const import DOMAIN, MANUFACTURER
-from .icons import ICON_WIFI, ICON_WIFI_OFF
+from .icons import ICON_MOBILE, ICON_MOBILE_OFF, ICON_WIFI, ICON_WIFI_OFF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +70,7 @@ async def async_setup_entry(
         _LOGGER.error("No interface data in coordinator data")
         return
         
-    _LOGGER.debug("Interface data: %s", coordinator.data["interface"])
-    
+
     wifi_interfaces = {
         k: v for k, v in coordinator.data["interface"].items()
         if k.startswith("WifiMaster") and "AccessPoint" in k
@@ -97,13 +97,41 @@ async def async_setup_entry(
                 interface_id
             )
 
-    _LOGGER.debug("Created %d switch entities", len(entities))
     if not entities:
         _LOGGER.warning(
             "No WiFi switches were created. Full interface data: %s",
             coordinator.data.get("interface", {})
         )
     
+
+    mobile_interfaces = {
+        k: v for k, v in coordinator.data["interface"].items()
+        if k.startswith("UsbLte")
+    }
+
+    _LOGGER.debug("Found Mobile interfaces: %s", mobile_interfaces)
+
+    for interface_id, interface_data in mobile_interfaces.items():
+     _LOGGER.debug("Processing Mobile interface: %s = %s", interface_id, interface_data)
+        
+     if interface_data.get("ssid") or interface_data.get("description"):
+        _LOGGER.debug("Creating switch for interface: %s", interface_id)
+        entities.append(
+            KeeneticMobileSwitch(
+                coordinator,
+                interface_id,
+                config_entry,
+                api
+            )
+        )
+     else:
+        _LOGGER.debug(
+            "Skipping interface %s: No SSID or description", 
+            interface_id
+        )
+
+    _LOGGER.debug("Created %d switch entities", len(entities))
+
     async_add_entities(entities)
 
 class KeeneticWiFiSwitch(CoordinatorEntity, SwitchEntity):
@@ -207,3 +235,108 @@ class KeeneticWiFiSwitch(CoordinatorEntity, SwitchEntity):
             await self.coordinator.async_request_refresh()
         except Exception as ex:
             _LOGGER.error("Failed to turn off WiFi network %s: %s", self._ap_id, str(ex))
+
+
+class KeeneticMobileSwitch(CoordinatorEntity, SwitchEntity):
+    """Representation of a Keenetic Mobile switch."""
+
+    def __init__(
+            self,
+            coordinator: DataUpdateCoordinator,
+            ap_id: str,
+            config_entry: ConfigEntry,
+            api,
+        ) -> None:
+            """Initialize the Mobile switch."""
+            super().__init__(coordinator)
+            self._ap_id = ap_id
+            self._config_entry = config_entry
+            self._api = api
+        
+            ap_data = self.coordinator.data["interface"][ap_id]
+       
+            self._attr_name = f"{ap_data.get("description","")}"
+                
+            self._attr_unique_id = f"{config_entry.entry_id}_wifi_{ap_id}"
+            self.entity_id = f"switch.keenetic_wifi_{ap_id.lower().replace('/', '_')}"
+            
+            # self._attr_device_info = DeviceInfo(
+            #     identifiers={(DOMAIN, config_entry.entry_id)},
+            #     name=f"{ap_data.get("description","")}",
+            #     manufacturer=coordinator.data.get('manufacturer', MANUFACTURER),
+            #     model=coordinator.data.get('model', 'Router'),
+            #     sw_version=coordinator.data.get('firmware_version', ''),
+            #     hw_version=coordinator.data.get('hardware_version', ''),
+            # )
+
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, config_entry.entry_id)},
+                name=f"Keenetic {coordinator.data.get('device', 'Router')}",
+                manufacturer=coordinator.data.get('manufacturer', MANUFACTURER),
+                model=coordinator.data.get('model', 'Router'),
+                sw_version=coordinator.data.get('firmware_version', ''),
+                hw_version=coordinator.data.get('hardware_version', ''),
+            )
+    
+    @property
+    def is_on(self) -> bool:
+        """Return true if Mobile network is enabled."""
+        if self.coordinator.data is None:
+            return False
+            
+        ap_data = self.coordinator.data["interface"].get(self._ap_id, {})
+        return ap_data.get("up", False)
+    
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        if self.coordinator.data is None:
+            return {}
+            
+        ap_data = self.coordinator.data["interface"].get(self._ap_id, {})    
+        
+        return {                    
+            "interface_name": ap_data.get("interface-name", ""),
+            "description": ap_data.get("description", ""),
+            "connected": ap_data.get("connected", "no"),
+            "type": ap_data.get("type", ""),         
+            "mac": ap_data.get("mac", ""),
+            "mobile": ap_data.get("mobile", ""),
+            "operator": ap_data.get("operator", ""),     
+            "connection-state" : ap_data.get("connection-state",""),
+            "state" : ap_data.get("state",""),         
+            "sim": ap_data.get("sim"),
+            "up": True if  ap_data.get("connected") == "yes" else False,
+            "link": ap_data.get("link"),
+            "temperature": ap_data.get("temperature"),         
+        }
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if Mobile network is enabled."""
+        if self.coordinator.data is None:
+            return False
+            
+        ap_data = self.coordinator.data["interface"].get(self._ap_id, {})
+        return ap_data.get("up", False) is True
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to use in the frontend."""
+        return ICON_MOBILE if self.is_on else ICON_MOBILE_OFF
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Mobile network."""
+        try:
+            await self._api.enable_wifi(self._ap_id)
+            await self.coordinator.async_request_refresh()
+        except Exception as ex:
+            _LOGGER.error("Failed to turn on Mobile network %s: %s", self._ap_id, str(ex))
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Mobile network."""
+        try:
+            await self._api.disable_wifi(self._ap_id)
+            await self.coordinator.async_request_refresh()
+        except Exception as ex:
+            _LOGGER.error("Failed to turn off Mobile network %s: %s", self._ap_id, str(ex))

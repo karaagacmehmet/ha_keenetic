@@ -1,10 +1,10 @@
 {
   "domain": "ha_keenetic_mk",
-  "name": "Keenetic Router & Mobile",
-  "codeowners": ["@akinin","@karaagacmehmet"],
+  "name": "Keenetic Router with Mobile Band",
+  "codeowners": [ "@akinin", "@karaagacmehmet" ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/akinin/ha_keenetic",
+  "documentation": "https://github.com/karaagacmehmet/ha_keenetic",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "",

@@ -10,10 +10,28 @@ from .api import KeeneticAPI
 
 _LOGGER = logging.getLogger(__name__)
 
+
+
+# ENABLE_REMOTE_DEBUG = True  # debug bittiğinde False yap veya bu bloğu sil
+
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Keenetic from a config entry."""
+
+    # --- Remote debug (geçici) ---
+    # if ENABLE_REMOTE_DEBUG:
+    #     try:
+    #         import debugpy  # type: ignore
+    #         debugpy.listen(("0.0.0.0", 5678))
+    #         _LOGGER.warning("ha_keenetic_mk: debugpy listening on 0.0.0.0:5678")
+    #         # DİKKAT: wait_for_client() KULLANMA, HA'yı bloklar.
+    #     except Exception as e:
+    #         _LOGGER.error("ha_keenetic_mk: debugpy init failed: %s", e)
+
+    
     try:
         api = KeeneticAPI(
             host=entry.data["host"],

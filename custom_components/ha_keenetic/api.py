@@ -14,6 +14,7 @@ from .const import (
 from .ethernet_processor import EthernetProcessor
 from .wifi_processor import WiFiProcessor
 from .mesh_processor import MeshProcessor
+from .mobile_processor import MobileProcessor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,16 +210,17 @@ class KeeneticAPI:
                     self._get_interface_statistics
                 )
 
-                wifi_interfaces = await WiFiProcessor.process_wifi_interfaces(
-                    session,
-                    self._base_url,
-                    self._auth_token
-                )
+                wifi_interfaces = await WiFiProcessor.process_wifi_interfaces(session,self._base_url,self._auth_token)
+
+                mobile_interfaces = await MobileProcessor.process_interfaces(session,self._base_url,self._auth_token)
 
                 all_interfaces = {
                     **ethernet_interfaces,
-                    **wifi_interfaces
+                    **wifi_interfaces,
+                    **mobile_interfaces
                 }
+                
+                _LOGGER.debug("All interfaces: %s", all_interfaces)
 
                 processed_mesh = MeshProcessor.process_mesh_nodes(mesh_info)
 

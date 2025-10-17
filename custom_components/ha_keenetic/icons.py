@@ -21,6 +21,8 @@ ICON_NETWORK = "mdi:network"
 ICON_WIFI = "mdi:wifi"
 ICON_WIFI_OFF = "mdi:wifi-off"
 ICON_WIFI_STRENGTH = "mdi:wifi-strength-4"
+ICON_MOBILE = "mdi:sim"
+ICON_MOBILE_OFF = "mdi:sim-off"
 
 # Status icons
 ICON_ONLINE = "mdi:check-circle"
