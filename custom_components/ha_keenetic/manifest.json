@@ -9,6 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "",
   "requirements": [],
+  "brand": "keenetic"
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
@@ -19,5 +20,5 @@
       "manufacturer": "ZyXEL Communications Corp."
     }
   ],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
