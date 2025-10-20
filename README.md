@@ -121,6 +121,9 @@ Mesh devices information (if available):
 
 ![Mesh information](images/9.png)
 
+Mobile devices information (if available):
+![Mobile information](images/10.png)
+
 ## Contributing
 
 Any suggestions for improvement are welcome.
