@@ -1,7 +1,7 @@
 {
-  "name": "Keenetic Router with Mobile Band",
+  "name": "Keenetic Router",
   "homeassistant": "2023.1",
-  "country": ["ALL"],
+  "country": [ "ALL" ],
   "render_readme": true,
-  "filename": "ha_keenetic_mk.zip"
+  "filename": "ha_keenetic.zip"
 }
