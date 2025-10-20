@@ -13,7 +13,7 @@ This is a Home Assistant custom integration for Keenetic Routers. It provides de
 - Monitor mesh network nodes
 - View detailed interface statistics
 
-- karaagacmehmet :  mobile band added
+- #### karaagacmehmet :  mobile band added
 
 ## Installation
 
