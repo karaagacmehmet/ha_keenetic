@@ -66,7 +66,7 @@ class KeeneticAPI:
                     if response.status == 200:
                         data = await response.json()
                         
-                        # memory =  disk olarak görünüyor . ram değil. modem arayüzüne göre
+                        # memory =  disk not ram değil according to router Web interface
                         memory_total = int(data.get("memtotal", 0))
                         memory_free = int(data.get("memfree", 0))
                         memory_usage = round((memory_total - memory_free) / memory_total * 100, 1) if memory_total > 0 else 0
@@ -226,9 +226,7 @@ class KeeneticAPI:
                     **wifi_interfaces,
                     **mobile_interfaces
                 }
-                
-                _LOGGER.debug("All interfaces: %s", all_interfaces)
-
+                          
                 processed_mesh = MeshProcessor.process_mesh_nodes(mesh_info)
 
                 return {

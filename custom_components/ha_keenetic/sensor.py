@@ -216,7 +216,7 @@ async def async_setup_entry(
     if coordinator.data and "interface" in coordinator.data:
         _LOGGER.debug("Found interfaces: %s", coordinator.data["interface"].keys())
         for interface_id, interface_data in coordinator.data["interface"].items():
-            if interface_data.get("type") in ["wan", "port", "aaaaaa"]:
+            if interface_data.get("type") in ["wan", "port"]:
                 entities.append(
                     KeeneticInterfaceSensor(
                         coordinator,
