@@ -9,11 +9,11 @@ This is a Home Assistant custom integration for Keenetic Routers. It provides de
 
 - Monitor router system information (CPU, memory, uptime)
 - Control WiFi networks (enable/disable)
+- Control Mobile networks (enable/disable)
 - View ethernet port status and statistics
 - Monitor mesh network nodes
 - View detailed interface statistics
 
-- #### karaagacmehmet :  mobile band added
 
 ## Installation
 
