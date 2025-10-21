@@ -49,44 +49,16 @@ async def _safe_json_from_response(resp: aiohttp.ClientResponse):
             f"first-bytes={snippet}"
         )
 
-class MobileProcessor:
+class UsbModemProcessor:
     """Process Mobile data from Keenetic router."""
 
     @staticmethod
     async def process_interfaces(session, base_url, auth_token) -> Dict[str, Any]:
-        """Process Mobile interfaces and return formatted data."""
+        """Process Usb Modem interfaces and return formatted data."""
         mobile_data = {}
-        # try:
-        #     for band in ["UsbLte0"]:
-        #         async with session.get(
-        #             f"{base_url}/rci/interface/{band}",
-        #             headers={"Authorization": f"Basic {auth_token}"},
-        #         ) as response:
-        #             if response.status == 200:
-        #                 master_data = await response.json()
-        #                 _LOGGER.warning("%s data: %s", band, master_data)
-                        
-        #                 ap_id = band
-
-        #                 mobile_data[ap_id] = {
-        #                     "id": ap_id,
-        #                     "type": "mobile",
-        #                     "description": master_data.get("description", ""),
-        #                     "mobile": master_data.get("mobile"),
-        #                     "up": master_data.get("up", False),
-        #                     "link": "up" if master_data.get("up") else "down",
-        #                 }
-
-                                        
-        #     _LOGGER.warning("Processed Mobile interfaces: %s", mobile_data)
-        #     return mobile_data
-            
-        # except Exception as ex:
-        #     _LOGGER.error("Error processing Mobile interfaces: %s", str(ex))
-        #     return {}
 
         try:
-            for band in ["UsbLte0","UsbLte1"]:
+            for band in ["UsbModem0","UsbModem1"]:
                 async with session.post(
                     f"{base_url}/rci/",
                     headers={"Authorization": f"Basic {auth_token}"},
@@ -109,24 +81,21 @@ class MobileProcessor:
                         mobile_data[ap_id] = {
                             "id": ap_id,
                             "type": master_data.get("type",0),
-                            "interface-name": master_data.get("interface-name", ""),
+                            "interface-name":interface_name ,
                             "mac": master_data.get("mac", ""),
                             "mobile": master_data.get("mobile", ""),
                             "operator": master_data.get("operator", ""),
-                            "connected" : master_data.get("connected",""),
-                            "connection-state" : master_data.get("connection-state",""),
+                            "connected" : master_data.get("connected",""),                            
                             "state" : master_data.get("state",""),
-                            "description":"Internal SIM:" + master_data.get("description", ""),
-                            "sim": master_data.get("sim"),
+                            "description": "USB Modem:" + master_data.get("description", ""),                            
                             "up": True if  master_data.get("connected") == "yes" else False,
-                            "link": master_data.get("link"),
-                            "temperature": master_data.get("temperature"),
+                            "link": master_data.get("link"),                            
                         }
 
                                         
-            _LOGGER.debug("Processed Mobile interfaces: %s", mobile_data)
+            _LOGGER.debug("Processed Usb Modem interfaces: %s", mobile_data)
             return mobile_data
             
         except Exception as ex:
-            _LOGGER.error("Error processing Mobile interfaces: %s", str(ex))
+            _LOGGER.error("Error processing Usb Modem interfaces: %s", str(ex))
             return {}

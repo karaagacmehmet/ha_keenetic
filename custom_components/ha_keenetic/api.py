@@ -15,6 +15,7 @@ from .ethernet_processor import EthernetProcessor
 from .wifi_processor import WiFiProcessor
 from .mesh_processor import MeshProcessor
 from .mobile_processor import MobileProcessor
+from .usb_modem_processor import UsbModemProcessor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,10 +222,13 @@ class KeeneticAPI:
 
                 mobile_interfaces = await MobileProcessor.process_interfaces(session,self._base_url,self._auth_token)
 
+                usb_modem_interfaces = await UsbModemProcessor.process_interfaces(session,self._base_url,self._auth_token)
+
                 all_interfaces = {
                     **ethernet_interfaces,
                     **wifi_interfaces,
-                    **mobile_interfaces
+                    **mobile_interfaces,
+                    **usb_modem_interfaces
                 }
                           
                 processed_mesh = MeshProcessor.process_mesh_nodes(mesh_info)

@@ -132,6 +132,34 @@ async def async_setup_entry(
 
     _LOGGER.debug("Created %d switch entities", len(entities))
 
+
+
+    usb_modem_interfaces = {
+        k: v for k, v in coordinator.data["interface"].items()
+        if k.startswith("UsbModem")
+    }
+
+    _LOGGER.debug("Found Usb Modem interfaces: %s", usb_modem_interfaces)
+
+    for interface_id, interface_data in usb_modem_interfaces.items():
+     _LOGGER.debug("Processing Usb Modem  interface: %s = %s", interface_id, interface_data)
+        
+     if interface_data.get("ssid") or interface_data.get("description"):
+        _LOGGER.debug("Creating switch for interface: %s", interface_id)
+        entities.append(
+            KeeneticMobileSwitch(
+                coordinator,
+                interface_id,
+                config_entry,
+                api
+            )
+        )
+     else:
+        _LOGGER.debug(
+            "Skipping interface %s: No SSID or description", 
+            interface_id
+        )
+
     async_add_entities(entities)
 
 class KeeneticWiFiSwitch(CoordinatorEntity, SwitchEntity):
@@ -257,8 +285,8 @@ class KeeneticMobileSwitch(CoordinatorEntity, SwitchEntity):
        
             self._attr_name = f"{ap_data.get("description","")}"
                 
-            self._attr_unique_id = f"{config_entry.entry_id}_wifi_{ap_id}"
-            self.entity_id = f"switch.keenetic_wifi_{ap_id.lower().replace('/', '_')}"
+            self._attr_unique_id = f"{config_entry.entry_id}_mobile_{ap_id}"
+            self.entity_id = f"switch.keenetic_mobile_{ap_id.lower().replace('/', '_')}"
             
             # self._attr_device_info = DeviceInfo(
             #     identifiers={(DOMAIN, config_entry.entry_id)},
