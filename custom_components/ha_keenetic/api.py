@@ -1,5 +1,6 @@
 ﻿"""API client for Keenetic routers."""
 import base64
+import json
 import logging
 import aiohttp
 from typing import Dict, Any
@@ -18,6 +19,47 @@ from .mobile_processor import MobileProcessor
 from .usb_modem_processor import UsbModemProcessor
 
 _LOGGER = logging.getLogger(__name__)
+_TURKISH_ENCODINGS = ("utf-8", "iso-8859-9", "windows-1254", "latin-1")
+
+async def _safe_json_from_response(resp: aiohttp.ClientResponse):
+        """
+        JSON'ı güvenli biçimde yükle:
+        1) resp.json(content_type=None)  -> Content-Type yanlış olsa da dener
+        2) ham bayttan çeşitli encoding kombinasyonlarıyla decode + json.loads
+        """
+        # 1) En doğru ve hızlı yol
+        try:
+            return await resp.json(content_type=None)
+        except Exception as e1:
+            _LOGGER.debug("resp.json() failed: %s; trying byte-decoding fallbacks", e1)
+
+        # 2) Ham baytları al
+        raw = await resp.read()
+
+        # A: JSON 'bytes' ise doğrudan json.loads kabul etmez, decode gerekir
+        last_err = None
+        for enc in _TURKISH_ENCODINGS:
+            try:
+                text = raw.decode(enc)
+                return json.loads(text)
+            except Exception as e2:
+                last_err = e2
+                continue
+
+        # B: Son çare: hatalı karakterleri atla (json bozulabilir; bu yüzden sadece debug amaçlı)
+        try:
+            text = raw.decode("utf-8", errors="ignore")
+            return json.loads(text)
+        except Exception:
+            pass
+
+        # Pes: Hata ver, kısa bir önizleme ekle
+        snippet = raw[:200].hex()
+        raise ValueError(
+            f"Failed to parse JSON with common encodings. Last error: {last_err}; "
+            f"first-bytes={snippet}"
+        )
+
 
 class KeeneticAPI:
     """Keenetic API client."""
@@ -131,7 +173,9 @@ class KeeneticAPI:
                     headers={"Authorization": f"Basic {self._auth_token}"},
                 ) as response:
                     if response.status == 200:
-                        data = await response.json()
+                        data  = await _safe_json_from_response(response)
+                        #data = await response.json()
+                        _LOGGER.warning("Raw interface data received: %s", data)
                         return data
                     return {}
         except Exception as ex:
@@ -151,7 +195,8 @@ class KeeneticAPI:
                     headers={"Authorization": f"Basic {self._auth_token}"},
                 ) as response:
                     if response.status == 200:
-                        return await response.json()
+                        return  await _safe_json_from_response(response)
+                        #return await response.json()
                     return {}
         except Exception as ex:
             _LOGGER.error("Error getting interface statistics: %s", str(ex))
