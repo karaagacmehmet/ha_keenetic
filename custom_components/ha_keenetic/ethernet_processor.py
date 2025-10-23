@@ -23,13 +23,9 @@ class EthernetProcessor:
                     break
 
             for interface_id, interface_data in interface_info.items():
-
-                _LOGGER.warning("Processing interface: %s --> %s", interface_id,interface_data)
-
+             
                 interface_stats = await get_statistics_fn(interface_id)
-
-                _LOGGER.warning("Interface stats: %s",interface_stats)
-                
+             
                 try:
                 
                     if interface_id == wan_interface:
@@ -73,7 +69,7 @@ class EthernetProcessor:
                                     }
                                 }
                 except Exception as ex:
-                    _LOGGER.warning("Error Processing interface: %s -- %s", interface_id,interface_data)
+                    #_LOGGER.debug("Error Processing interface: %s -- %s", interface_id,interface_data)
                     continue
 
 
