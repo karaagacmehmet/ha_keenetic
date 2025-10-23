@@ -2,6 +2,7 @@
 from typing import Any
 import logging
 from urllib.parse import urlparse
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -31,11 +32,14 @@ from .api import KeeneticAPI
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
+
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
 
 class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Keenetic."""
@@ -55,7 +59,7 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 password=data[CONF_PASSWORD],
                 port=data[CONF_PORT],
             )
-            
+
             if not await api.authenticate():
                 raise InvalidAuth
 
@@ -66,9 +70,10 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
 
         except InvalidAuth:
-            raise InvalidAuth
+            # Re-raise to be caught by caller
+            raise
         except Exception as error:
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Unexpected exception during validation")
             raise CannotConnect from error
 
     async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
@@ -81,10 +86,10 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: hostname})
 
         self.discovered_host = hostname
-        
+
         self.context["title_placeholders"] = {
             "name": discovery_info.upnp.get("friendlyName", "Keenetic Router"),
-            "host": hostname
+            "host": hostname,
         }
 
         return await self.async_step_user()
@@ -93,12 +98,12 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
                 user_input[CONF_HOST] = self.discovered_host or user_input[CONF_HOST]
-                
+
                 await self.async_validate_input(user_input)
 
                 user_input[CONF_ENABLE_MESH] = DEFAULT_ENABLE_MESH
@@ -114,7 +119,7 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = ERROR_INVALID_AUTH
             except Exception:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception in user step")
                 errors["base"] = ERROR_UNKNOWN
 
         default_host = self.discovered_host or DEFAULT_HOST
@@ -127,30 +132,31 @@ class KeeneticConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
-                        vol.Coerce(int), 
-                        vol.Range(min=1, max=65535)
+                        vol.Coerce(int),
+                        vol.Range(min=1, max=65535),
                     ),
                 }
             ),
             errors=errors,
         )
 
-
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry
+        config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return KeeneticOptionsFlow(config_entry)
+        # Do not pass config_entry; Core injects it after instantiation.
+        return KeeneticOptionsFlow()
 
 
 class KeeneticOptionsFlow(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        # Do not set self.config_entry here; Core will inject it.
+        pass
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -159,7 +165,7 @@ class KeeneticOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = self.config_entry.options
+        options = self.config_entry.options  # Injected by Cor_
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
