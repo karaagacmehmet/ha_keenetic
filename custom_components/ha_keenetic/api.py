@@ -175,7 +175,7 @@ class KeeneticAPI:
                     if response.status == 200:
                         data  = await _safe_json_from_response(response)
                         #data = await response.json()
-                        _LOGGER.warning("Raw interface data received: %s", data)
+                        #_LOGGER.warning("Raw interface data received: %s", data)
                         return data
                     return {}
         except Exception as ex:
