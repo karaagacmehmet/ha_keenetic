@@ -16,25 +16,27 @@ class EthernetProcessor:
         processed_ports = {}
         
         try:
-            wan_interface = None
-            for interface_id, interface_data in interface_info.items():
-                if interface_data.get("defaultgw") is True:
-                    wan_interface = interface_id
-                    break
 
             for interface_id, interface_data in interface_info.items():
              
+                #is_default_gateway = interface_data.get("defaultgw") is True
+                interface_type = interface_data.get("type","")
+
+                if  interface_type not in [ "PPPoE" ,"GigabitEthernet"]:
+                    continue
+
+            
                 interface_stats = await get_statistics_fn(interface_id)
              
                 try:
                 
-                    if interface_id == wan_interface:
+                    if interface_type == "PPPoE":
                         port_data = interface_data.get("port", {})
                         processed_ports[interface_id] = {
                             "id": interface_id,
                             "type": "wan",
                             "description": interface_data.get("description", ""),
-                            "label": "WAN:" + interface_data.get("description", "") ,
+                            "label": "LAN:" + interface_data.get("description", "") ,
                             "link": interface_data.get("link", "down"),
                             "attributes": {
                                 "speed": port_data.get("speed", "0"),
